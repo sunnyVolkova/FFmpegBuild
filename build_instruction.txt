@@ -1,0 +1,28 @@
+This instruction works for ffmpeg-2.6.2 x264 versions 142 and 146, and android-ndk-r10d.
+1. download x264 to x264 folder (http://git.videolan.org/?p=x264.git;a=commit;h=121396c71b4907ca82301d1a529795d98daab5f8 or ftp://ftp.videolan.org/pub/x264/snapshots/last_x264.tar.bz2)  
+2. download ffmpeg (2.6.2) to ffmpeg-2.6.2 folder (https://github.com/FFmpeg/FFmpeg/releases/tag/n2.6.2)
+ probably you may need to run "find . -type f -print0 | xargs -0 dos2unix in x264 folder"
+3. update x264/configure file to get right library names.
+	change: echo "SONAME=libx264.so.$API" >> config.mak
+	to:     echo "SONAME=libx264-$API.so" >> config.mak
+4. add build_x264.sh to x264 folder
+5. Update configure file
+Open ffmpeg-2.6.2/configure file with a text editor, and locate the following lines.
+
+	SLIBNAME_WITH_MAJOR='$(SLIBNAME).$(LIBMAJOR)'
+	LIB_INSTALL_EXTRA_CMD='$$(RANLIB) "$(LIBDIR)/$(LIBNAME)"'
+	SLIB_INSTALL_NAME='$(SLIBNAME_WITH_VERSION)'
+	SLIB_INSTALL_LINKS='$(SLIBNAME_WITH_MAJOR) $(SLIBNAME)'
+	This cause ffmpeg shared libraries to be compiled to libavcodec.so.<version> (e.g. libavcodec.so.55), which is not compatible with Android build system. Therefore we’ll need to replace the above lines with the following lines.
+
+	SLIBNAME_WITH_MAJOR='$(SLIBPREF)$(FULLNAME)-$(LIBMAJOR)$(SLIBSUF)'
+	LIB_INSTALL_EXTRA_CMD='$$(RANLIB) "$(LIBDIR)/$(LIBNAME)"'
+	SLIB_INSTALL_NAME='$(SLIBNAME_WITH_MAJOR)'
+	SLIB_INSTALL_LINKS='$(SLIBNAME)'
+6. add build_ffmpeg.sh to ffmpeg-2.6.2 folder
+7. add build_android.sh to root folder
+7. set ANDROID_NDK_HOME variable: "export ANDROID_NDK_HOME=/home/sunny/ndk/android-ndk-r10d/" (use real path to ndk)
+8. copy armeabi, armeabi-v7a and x86 folders to project's jni folder
+9. add Android.mk to armeabi, armeabi-v7a and x86 folders
+10. add Application.mk and Android.mk to project's jni folder
+11. now you can write your own code using compiled libs, or use FFmpegKit files
